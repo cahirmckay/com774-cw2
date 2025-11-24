@@ -1,0 +1,21 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+
+name: cw2-classification-train-job
+display_name: ClassificationTrainingJob
+description: Train a RandomForest classifier for time_to_resolve_grouped
+
+experiment_name: cw2-classification-experiment
+
+code: ../
+command: >
+  python training/train_classification.py 
+  --data_path data/com_774_dataset.parquet
+
+environment: azureml:cw2-training-env@latest
+
+compute: azureml:cw2-compute
+
+inputs:
+  data_path:
+    path: ../data/com_774_dataset.parquet
+    mode: ro_mount
