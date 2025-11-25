@@ -1,21 +1,26 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
 
-name: cw2-classification-train-job
-display_name: ClassificationTrainingJob
-description: Train a RandomForest classifier for time_to_resolve_grouped
-
-experiment_name: cw2-classification-experiment
-
-code: ../
 command: >
-  python training/train_classification.py 
-  --data_path data/com_774_dataset.parquet
+  python training/train_classification.py
+  --data_path ${{inputs.incident_data}}
+  --feature_version ${{inputs.feature_version}}
 
-environment: azureml:cw2-training-env@latest
-
-compute: azureml:cw2-compute
+code: .
 
 inputs:
-  data_path:
-    path: ../data/com_774_dataset.parquet
-    mode: ro_mount
+  incident_data:
+    type: uri_file
+    path: data/com_774_dataset.parquet
+  feature_version:
+    type: string
+    # Example values: "base", "minmax", "zscore"
+    default: base
+
+environment:
+  conda_file: pipelines/environment.yml
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:latest
+
+compute: azureml:cpu-cluster
+
+experiment_name: cw2-classification
+description: "Classification model training for time_to_resolve_grouped with feature versioning"

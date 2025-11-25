@@ -1,51 +1,54 @@
 import json
 import joblib
+import pandas as pd
 import os
-
+from training.preprocessing import select_features
 
 
 def init():
     """
-    Called once when the Azure ML deployment container starts.
-    Loads the trained model from the 'model' directory.
+    Called once when the Azure ML endpoint starts.
+    Loads the model into memory.
     """
+
     global model
 
-    model_path = os.path.join(os.getenv("AZUREML_MODEL_DIR", "model"), "model.pkl")
+    # Azure ML places model files in /var/azureml-app/ or model directory inside the container
+    model_path = os.path.join(os.getenv("AZUREML_MODEL_DIR", ""), "model.pkl")
 
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model file not found at: {model_path}")
 
     model = joblib.load(model_path)
-    print(f"Loaded model from {model_path}")
+    print("Model loaded successfully from:", model_path)
 
 
 def run(raw_data):
     """
-    Handles prediction requests.
+    Called for each request to the endpoint.
     """
 
     try:
-        # Parse JSON string input
-        data = json.loads(raw_data)
-        input_rows = data.get("data", [])
+        request = json.loads(raw_data)
 
-        if not input_rows:
-            return json.dumps({"error": "No input data received"})
+        if "data" not in request:
+            return {"error": "Missing 'data' field in request"}
 
-        # Convert list of dicts to feature matrix
-        import pandas as pd
-        df = pd.DataFrame(input_rows)
+        feature_version = request.get("feature_version", "raw")
 
-        # Make predictions
-        predictions = model.predict(df)
+        # Convert incoming records to DataFrame
+        df = pd.DataFrame(request["data"])
 
-        # Convert numpy values to native Python types
+        # Apply feature selection using the SAME logic as training
+        X = select_features(df, feature_version=feature_version)
+
+        # Predict
+        predictions = model.predict(X)
+
+        # Convert to Python types for JSON
         predictions = predictions.tolist()
 
-        # Classification model → return predicted class labels
-        # Regression model → return numeric values
-        return json.dumps({"predictions": predictions})
+        return {"predictions": predictions}
 
     except Exception as e:
-        return json.dumps({"error": str(e)})
+        return {"error": str(e)}

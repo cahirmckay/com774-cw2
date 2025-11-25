@@ -5,16 +5,17 @@ auth_mode: key
 
 deployments:
   - name: default
-    model: azureml:cw2-model:1        # UPDATE THIS when you register your model
+    model: azureml:cw2-regression-model:1    # CHANGE THIS AFTER REGISTERING MODELS
     environment:
       conda_file: pipelines/environment.yml
       image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:latest
+
     code_configuration:
       code: ./deployment
       scoring_script: score.py
-    instance_type: Standard_DS2_v2      # Cheap CPU instance (change once you check availability)
+
+    instance_type: Standard_DS2_v2
     instance_count: 1
 
 traffic:
   default: 100
-

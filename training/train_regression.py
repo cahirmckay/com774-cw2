@@ -12,58 +12,88 @@ __version__ = "1.0.0"
 
 
 def main(args):
+    print("Starting regression training script.")
+    print(f"Data path provided: {args.data_path}")
+    print(f"Selected feature version: {args.feature_version}")
+
     run = Run.get_context()
 
-    # Load dataset
+    # Load the dataset
+    print("Loading dataset...")
     df = load_parquet(args.data_path)
+    print(f"Dataset successfully loaded with {len(df)} rows.")
 
-    # Preprocess (X, y)
-    X, y = prepare_regression_data(df)
+    # Preprocess the data
+    print("Beginning preprocessing steps...")
+    X, y = prepare_regression_data(df, feature_version=args.feature_version)
+    print(f"Preprocessing completed. Feature matrix shape: {X.shape}. Target length: {len(y)}")
 
-    # Split
+    # Split the data
+    print("Performing train-test split...")
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
     )
+    print("Train-test split completed.")
 
-    # Model
+    # Define the regression model
+    print("Initialising the RandomForestRegressor model...")
     model = RandomForestRegressor(
-        n_estimators=200,
+        n_estimators=300,
         max_depth=None,
-        random_state=42,
+        random_state=42
     )
 
+    # Train the model
+    print("Training the regression model...")
     model.fit(X_train, y_train)
+    print("Model training completed.")
+
+    # Make predictions
+    print("Generating predictions on the test set...")
     predictions = model.predict(X_test)
 
-    # Metrics
-    mean_absolute_error_value = mean_absolute_error(y_test, predictions)
-    mean_squared_error_value = mean_squared_error(y_test, predictions)
-    root_mean_squared_error_value = mean_squared_error_value ** 0.5
-    r2_score_value = r2_score(y_test, predictions)
+    # Calculate metrics
+    print("Calculating performance metrics...")
+    mae = mean_absolute_error(y_test, predictions)
+    mse = mean_squared_error(y_test, predictions)
+    r2 = r2_score(y_test, predictions)
 
-    print("Mean Absolute Error:", mean_absolute_error_value)
-    print("Root Mean Squared Error:", root_mean_squared_error_value)
-    print("R2 Score:", r2_score_value)
+    print(f"Mean Absolute Error: {mae}")
+    print(f"Mean Squared Error: {mse}")
+    print(f"R2 Score: {r2}")
 
     # Log to Azure ML
-    run.log("mean_absolute_error", mean_absolute_error_value)
-    run.log("root_mean_squared_error", root_mean_squared_error_value)
-    run.log("r2_score", r2_score_value)
+    print("Logging performance metrics to Azure ML...")
+    run.log("mean_absolute_error", mae)
+    run.log("mean_squared_error", mse)
+    run.log("r2_score", r2)
+    run.log("feature_version_used", args.feature_version)
 
-    # Save model
+    # Save the model
+    print("Saving trained model to the outputs folder...")
     os.makedirs("outputs", exist_ok=True)
-    joblib.dump(model, "outputs/regression_model.pkl")
-    print("Model saved to outputs/regression_model.pkl")
+    model_path = f"outputs/regression_model_v{args.feature_version}.pkl"
+    joblib.dump(model, model_path)
+    print(f"Model saved successfully to: {model_path}")
+
+    print("Regression training script completed successfully.")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="Train a RandomForest regression model.")
 
     parser.add_argument(
         "--data_path",
         type=str,
         default="data/com_774_dataset.parquet",
-        help="Path to the parquet dataset",
+        help="Path to the parquet dataset used for training.",
+    )
+
+    parser.add_argument(
+        "--feature_version",
+        type=str,
+        default="raw",
+        help="Feature version to use. Options: raw, minmax, zscore.",
     )
 
     args = parser.parse_args()
