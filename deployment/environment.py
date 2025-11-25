@@ -7,8 +7,6 @@ This file is used only by Azure ML to understand requirements
 when creating the managed online deployment. It is NOT executed locally.
 """
 
-import os
-
 # The scoring environment simply needs to expose a function that Azure ML can read.
 # We define a simple helper so the file is not empty.
 def get_environment_info():
