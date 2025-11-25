@@ -1,10 +1,19 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+
 name: cw2-training-env
-dependencies:
-  - python=3.10
-  - pip:
-      - pandas
-      - numpy
-      - scikit-learn
-      - azureml-core
-      - azureml-mlflow
-      - joblib
+version: 1
+image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:latest
+description: Environment for CW2 model training and scoring.
+
+conda_file:
+  dependencies:
+    - python=3.10
+    - pip:
+        - pandas
+        - numpy
+        - scikit-learn
+        - azureml-core
+        - azureml-mlflow
+        - joblib
+        - pyarrow
+

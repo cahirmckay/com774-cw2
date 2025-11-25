@@ -2,25 +2,23 @@ $schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
 
 command: >
   python training/train_regression.py
-  --data_path ${{inputs.incident_data}}
+  --data_path ${{inputs.data_path}}
   --feature_version ${{inputs.feature_version}}
 
-code: .
+code: ../
 
 inputs:
-  incident_data:
+  data_path:
     type: uri_file
-    path: data/com_774_dataset.parquet
+    path: azureml:com774-dataset:1
   feature_version:
     type: string
     # Example values: "base", "minmax", "zscore"
     default: base
 
-environment:
-  conda_file: pipelines/environment.yml
-  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:latest
+environment: azureml:cw2-training-env@latest
 
-compute: azureml:cpu-cluster
+compute: azureml:cw2-compute
 
 experiment_name: cw2-regression
 description: "Regression model training for numeric time_to_resolve with feature versioning"

@@ -1,0 +1,11 @@
+name: cw2-training-env
+dependencies:
+  - python=3.10
+  - pip:
+      - pandas
+      - numpy
+      - scikit-learn
+      - azureml-core
+      - azureml-mlflow
+      - joblib
+      - pyarrow
