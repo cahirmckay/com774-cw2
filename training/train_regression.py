@@ -1,11 +1,12 @@
 import argparse
+import sys
 import os
 import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.ensemble import RandomForestRegressor
 from azureml.core import Run
-import sys, os
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from training.preprocessing import load_parquet, prepare_regression_data

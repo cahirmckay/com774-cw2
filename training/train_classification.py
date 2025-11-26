@@ -1,4 +1,5 @@
 import argparse
+import sys
 import os
 import joblib
 from sklearn.model_selection import train_test_split
@@ -6,7 +7,6 @@ from sklearn.metrics import f1_score, classification_report
 from sklearn.ensemble import RandomForestClassifier
 from azureml.core import Run
 
-import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from training.preprocessing import load_parquet, prepare_classification_data
