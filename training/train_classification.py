@@ -6,9 +6,10 @@ from sklearn.metrics import f1_score, classification_report
 from sklearn.ensemble import RandomForestClassifier
 from azureml.core import Run
 
-from training.preprocessing import load_parquet, prepare_classification_data
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-__version__ = "1.0.0"
+from training.preprocessing import load_parquet, prepare_classification_data
 
 
 def main(args):

@@ -5,10 +5,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.ensemble import RandomForestRegressor
 from azureml.core import Run
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from training.preprocessing import load_parquet, prepare_regression_data
-
-__version__ = "1.0.0"
 
 
 def main(args):
@@ -72,7 +72,10 @@ def main(args):
     # Save the model
     print("Saving trained model to the outputs folder...")
     os.makedirs("outputs", exist_ok=True)
-    model_path = f"outputs/regression_model_v{args.feature_version}.pkl"
+
+    model_filename = f"regression_model_v_{args.feature_version}.pkl"
+    model_path = os.path.join("outputs", model_filename)
+
     joblib.dump(model, model_path)
     print(f"Model saved successfully to: {model_path}")
 
