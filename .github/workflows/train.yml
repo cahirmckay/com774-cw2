@@ -1,0 +1,62 @@
+name: Manual Train Model (Azure ML CD)
+
+on:
+  workflow_dispatch:
+    inputs:
+      model_type:
+        description: "Choose which model to train"
+        required: true
+        type: choice
+        options:
+          - regression
+          - classification
+      feature_version:
+        description: "Choose feature version"
+        required: true
+        type: choice
+        options:
+          - raw
+          - minmax
+          - zscore
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Azure ML CLI
+        run: |
+          az extension add -n ml -y
+          az extension update -n ml
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Run Azure ML training job
+        run: |
+          echo "Training type: ${{ github.event.inputs.model_type }}"
+          echo "Feature version: ${{ github.event.inputs.feature_version }}"
+
+          if [ "${{ github.event.inputs.model_type }}" == "regression" ]; then
+              az ml job create \
+                --file pipelines/regression_job.yml \
+                --resource-group rg-com774-cw2 \
+                --workspace-name mlw-com774-cw2 \
+                --set inputs.feature_version=${{ github.event.inputs.feature_version }}
+          else
+              az ml job create \
+                --file pipelines/classification_job.yml \
+                --resource-group rg-com774-cw2 \
+                --workspace-name mlw-com774-cw2 \
+                --set inputs.feature_version=${{ github.event.inputs.feature_version }}
+          fi
