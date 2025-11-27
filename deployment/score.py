@@ -1,54 +1,37 @@
 import json
+import numpy as np
 import joblib
-import pandas as pd
 import os
-from training.preprocessing import select_features
-
 
 def init():
-    """
-    Called once when the Azure ML endpoint starts.
-    Loads the model into memory.
-    """
-
-    global model
-
-    # Azure ML places model files in /var/azureml-app/ or model directory inside the container
-    model_path = os.path.join(os.getenv("AZUREML_MODEL_DIR", ""), "model.pkl")
-
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Model file not found at: {model_path}")
-
+    global model, class_labels
+    
+    # Path to the model inside the Azure ML endpoint
+    model_path = os.path.join(os.getenv("AZUREML_MODEL_DIR"), "classification_model_vzscore.pkl")
+    
+    # Load the model
     model = joblib.load(model_path)
-    print("Model loaded successfully from:", model_path)
+
+    # The classes in the order used during training
+    class_labels = ["0–24h", "1–3d", "3–7d", "7+d"]
 
 
 def run(raw_data):
-    """
-    Called for each request to the endpoint.
-    """
-
     try:
-        request = json.loads(raw_data)
+        # Parse input JSON
+        data = json.loads(raw_data)
 
-        if "data" not in request:
-            return {"error": "Missing 'data' field in request"}
+        # Expecting JSON: {"data": [[...], [...]]}
+        input_array = np.array(data["data"])
 
-        feature_version = request.get("feature_version", "raw")
+        # Make predictions
+        predictions = model.predict(input_array)
 
-        # Convert incoming records to DataFrame
-        df = pd.DataFrame(request["data"])
+        # Convert class index → label
+        predicted_labels = [class_labels[int(p)] for p in predictions]
 
-        # Apply feature selection using the SAME logic as training
-        X = select_features(df, feature_version=feature_version)
-
-        # Predict
-        predictions = model.predict(X)
-
-        # Convert to Python types for JSON
-        predictions = predictions.tolist()
-
-        return {"predictions": predictions}
+        # Return response
+        return {"predictions": predicted_labels}
 
     except Exception as e:
         return {"error": str(e)}
