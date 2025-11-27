@@ -6,4 +6,5 @@ pytest
 ruff
 pyarrow
 azureml-core==1.56.0
-
+locust
+requests
