@@ -4,6 +4,7 @@ import locust_env
 
 class CW2LoadTest(HttpUser):
     wait_time = between(1, 3)
+    host = locust_env.HOST 
 
     def on_start(self):
         self.headers = {
@@ -15,12 +16,12 @@ class CW2LoadTest(HttpUser):
     def predict(self):
         payload = {
             "data": [
-                [0.12, 0.03, 5, 1, 10, 0.2, 0, 1, 3, 0.1]
+                [0.11, -0.42, 1.23, -0.88, 0.56, -1.12, 0.34, 1.08, -0.59, 0.21]
             ]
         }
         self.client.post(
-            locust_env.ENDPOINT_URL,
+            "/score", 
             data=json.dumps(payload),
-            headers=self.headers,
-            name="sinlge_prediction"
+            headers=self.headers
         )
+

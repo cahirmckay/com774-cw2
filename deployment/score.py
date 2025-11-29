@@ -7,7 +7,12 @@ def init():
     global model, class_labels
     
     # Path to the model inside the Azure ML endpoint
-    model_path = os.path.join(os.getenv("AZUREML_MODEL_DIR"), "classification_model_vzscore.pkl")
+    model_path = os.path.join(
+    os.getenv("AZUREML_MODEL_DIR"),
+    "outputs",
+    "classification_model_vzscore.pkl"
+)
+
     
     # Load the model
     model = joblib.load(model_path)
@@ -19,19 +24,20 @@ def init():
 def run(raw_data):
     try:
         # Parse input JSON
-        data = json.loads(raw_data)
+        data = json.loads(raw_data)["data"]
 
-        # Expecting JSON: {"data": [[...], [...]]}
-        input_array = np.array(data["data"])
+        # Convert to numpy array
+        X = np.array(data)
 
-        # Make predictions
-        predictions = model.predict(input_array)
+        # Get predictions
+        preds = model.predict(X)
 
-        # Convert class index → label
-        predicted_labels = [class_labels[int(p)] for p in predictions]
+        # Convert numpy array -> Python list
+        preds = preds.tolist()
 
-        # Return response
-        return {"predictions": predicted_labels}
+        # Return predictions as JSON
+        return json.dumps({"predictions": preds})
 
     except Exception as e:
-        return {"error": str(e)}
+        return json.dumps({"error": str(e)})
+
